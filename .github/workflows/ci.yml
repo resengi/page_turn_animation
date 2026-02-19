@@ -1,0 +1,26 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  analyze:
+    name: Analyze
+    runs-on: ubuntu-latest
+    container: instrumentisto/flutter:latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: flutter pub get
+      - run: flutter analyze
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    container: instrumentisto/flutter:latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: flutter pub get
+      - run: flutter test

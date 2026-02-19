@@ -1,0 +1,20 @@
+name: page_turn_animation
+
+packages:
+  - .
+
+command:
+  version:
+    # Use conventional commits to determine version bumps
+    # feat: → minor, fix: → patch, feat!/BREAKING CHANGE → major
+    message: "chore: release v{new_version} [skip ci]"
+    # Link to GitHub releases
+    releaseUrl: true
+    # Customize the changelog header
+    changelogs:
+      - path: CHANGELOG.md
+        packageFilters:
+          include:
+            - page_turn_animation
+  bootstrap:
+    usePubspecOverrides: true
