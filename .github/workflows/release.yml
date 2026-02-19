@@ -135,9 +135,6 @@ jobs:
 
       - run: flutter pub get
 
-      - name: Dry run publish
-        run: dart pub publish --dry-run
-
       - name: Commit version bump and tag
         run: |
           git config user.name "github-actions[bot]"
