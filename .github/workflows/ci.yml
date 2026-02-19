@@ -16,6 +16,8 @@ jobs:
     name: Analyze
     runs-on: ubuntu-latest
     container: instrumentisto/flutter:latest
+    if: github.actor != 'resengi-release-bot[bot]'
+
     steps:
       - uses: actions/checkout@v4
       - run: flutter pub get
@@ -25,6 +27,8 @@ jobs:
     name: Test
     runs-on: ubuntu-latest
     container: instrumentisto/flutter:latest
+    if: github.actor != 'resengi-release-bot[bot]'
+    
     steps:
       - uses: actions/checkout@v4
       - run: flutter pub get
