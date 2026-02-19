@@ -61,7 +61,7 @@ jobs:
         run: melos bootstrap
 
       - name: Bump version (local files only — no git tag, no publish)
-        run: melos version --no-git-tag-version --no-publish --yes
+        run: melos version --no-git-commit-version --yes
 
       - name: Capture version and detect changes
         id: capture
