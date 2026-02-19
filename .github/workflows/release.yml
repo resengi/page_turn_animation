@@ -96,7 +96,7 @@ jobs:
     runs-on: ubuntu-latest
     container: instrumentisto/flutter:latest
     environment: pub.dev
-    
+
     steps:
       - uses: actions/checkout@v4
         with:
@@ -120,6 +120,3 @@ jobs:
           git commit -m "chore: release v${VERSION} [skip ci]"
           git tag "v${VERSION}"
           git push origin main --tags
-
-      - name: Publish to pub.dev
-        run: dart pub publish --force
