@@ -43,14 +43,20 @@ jobs:
           dart pub global activate melos
           echo "$HOME/.pub-cache/bin" >> "$GITHUB_PATH"
 
-      - name: Copy Melos config to root
-        run: cp .github/melos.yaml melos.yaml
+      - name: Inject Melos workspace config into pubspec.yaml
+        run: |
+          echo "" >> pubspec.yaml
+          echo "# --- MELOS CONFIG (injected at CI time) ---" >> pubspec.yaml
+          cat .github/melos.yaml >> pubspec.yaml
 
       - name: Bootstrap
         run: melos bootstrap
 
       - name: Bump version (local files only — no git tag, no publish)
         run: melos version --no-git-tag-version --no-publish --yes
+      
+      - name: Strip Melos config from pubspec.yaml
+        run: sed -i '/^# --- MELOS CONFIG/,$d' pubspec.yaml
 
       - name: Capture version and detect changes
         id: capture
