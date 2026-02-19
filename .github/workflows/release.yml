@@ -1,10 +1,12 @@
-name: CI & Release
+name: Release
 
 on:
-  push:
+  workflow_run:
+    workflows: ["CI"]
+    types:
+      - completed
     branches:
       - main
-  pull_request:
 
 env:
   GIT_CONFIG_COUNT: 2
@@ -22,36 +24,19 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  analyze:
-    name: Analyze
-    runs-on: ubuntu-latest
-    container: instrumentisto/flutter:latest
-    steps:
-      - uses: actions/checkout@v4
-      - run: flutter pub get
-      - run: flutter analyze
-
-  test:
-    name: Test
-    runs-on: ubuntu-latest
-    container: instrumentisto/flutter:latest
-    steps:
-      - uses: actions/checkout@v4
-      - run: flutter pub get
-      - run: flutter test
-  
   version:
-    name: Version
+    name: "Version"
     runs-on: ubuntu-latest
     container: instrumentisto/flutter:latest
-
-    needs: [analyze, test]
-    if: github.ref == 'refs/heads/main'
 
     permissions:
       contents: read
     env:
       GITHUB_TOKEN: ""
+
+    if: >-
+      github.event.workflow_run.conclusion == 'success'
+      && github.actor != 'resengi-release-bot[bot]'
 
     outputs:
       new_version: ${{ steps.capture.outputs.version }}
@@ -133,8 +118,8 @@ jobs:
             pubspec.yaml
             CHANGELOG.md
 
-  release:
-    name: Release (push updates to Github)
+  publish:
+    name: "Publish"
     needs: version
     if: needs.version.outputs.has_changes == 'true'
     runs-on: ubuntu-latest
@@ -164,29 +149,6 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           VERSION="${{ needs.version.outputs.new_version }}"
           git add pubspec.yaml CHANGELOG.md
-          git commit -m "chore: release v${VERSION} [skip ci]"
+          git commit -m "chore: release v${VERSION}"
           git tag "v${VERSION}"
           git push origin main --tags
-    
-  publish:
-    name: Publish to pub.dev
-    needs: [version, release]
-    runs-on: ubuntu-latest
-    container: instrumentisto/flutter:latest
-    environment: pub.dev
-    permissions:
-      id-token: write
-      contents: read
-    
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: v${{ needs.version.outputs.new_version }}
-
-      - run: flutter pub get
-
-      - name: Dry run publish
-        run: dart pub publish --dry-run
-
-      - name: Publish to pub.dev
-        run: dart pub publish --force
