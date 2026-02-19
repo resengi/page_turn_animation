@@ -9,9 +9,11 @@ on:
       - main
 
 env:
-  GIT_CONFIG_COUNT: 1
+  GIT_CONFIG_COUNT: 2
   GIT_CONFIG_KEY_0: safe.directory
   GIT_CONFIG_VALUE_0: /usr/local/flutter
+  GIT_CONFIG_KEY_1: safe.directory
+  GIT_CONFIG_VALUE_1: /__w/page_turn_animation/page_turn_animation
 
 permissions:
   contents: write
@@ -27,6 +29,11 @@ jobs:
     runs-on: ubuntu-latest
     container: instrumentisto/flutter:latest
 
+    permissions:
+      contents: read
+    env:
+      GITHUB_TOKEN: ""
+
     if: github.event.workflow_run.conclusion == 'success'
 
     outputs:
@@ -37,11 +44,15 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      
+      - name: Save original pubspec (for later restoration)
+        run: cp pubspec.yaml pubspec.yaml.orig
 
       - name: Install Melos
         run: |
           dart pub global activate melos
           echo "$HOME/.pub-cache/bin" >> "$GITHUB_PATH"
+          dart pub add melos --dev
 
       - name: Inject Melos workspace config into pubspec.yaml
         run: |
@@ -52,17 +63,22 @@ jobs:
       - name: Bootstrap
         run: melos bootstrap
 
-      - name: Bump version (local files only — no git tag, no publish)
-        run: melos version --no-git-tag-version --no-publish --yes
-      
-      - name: Strip Melos config from pubspec.yaml
-        run: sed -i '/^# --- MELOS CONFIG/,$d' pubspec.yaml
+      - name: Fetch tags
+        run: git fetch --tags
+
+      - name: Bump version (local files only — no git tag, no commit)
+        run: melos version --no-git-commit-version --yes
 
       - name: Capture version and detect changes
         id: capture
         run: |
           VERSION=$(grep '^version:' pubspec.yaml | awk '{print $2}')
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+          # Restore the original pubspec and apply only the version bump,
+          # so the commit stays free of injected Melos config.
+          cp pubspec.yaml.orig pubspec.yaml
+          sed -i "s/^version:.*/version: ${VERSION}/" pubspec.yaml
 
           if git diff --quiet; then
             echo "has_changes=false" >> "$GITHUB_OUTPUT"
@@ -106,7 +122,7 @@ jobs:
     if: needs.version.outputs.has_changes == 'true'
     runs-on: ubuntu-latest
     container: instrumentisto/flutter:latest
-    environment: pub.dev
+    environment: release
 
     steps:
       - uses: actions/checkout@v4
@@ -118,9 +134,6 @@ jobs:
           name: versioned-files
 
       - run: flutter pub get
-
-      - name: Dry run publish
-        run: dart pub publish --dry-run
 
       - name: Commit version bump and tag
         run: |
