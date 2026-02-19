@@ -153,6 +153,7 @@ jobs:
     
   release:
     name: Publish to pub.dev
+    needs: publish
     runs-on: ubuntu-latest
     container: instrumentisto/flutter:latest
     environment: pub.dev
