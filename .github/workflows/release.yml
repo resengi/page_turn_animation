@@ -5,9 +5,8 @@ on:
     workflows: ["CI"]
     types:
       - completed
-    # branches:
-    #   - main
-  pull_request:
+    branches:
+      - main
 
 env:
   GIT_CONFIG_COUNT: 2
@@ -35,10 +34,7 @@ jobs:
     env:
       GITHUB_TOKEN: ""
 
-    if: >-
-      github.event_name == 'pull_request' ||
-      github.event_name == 'workflow_dispatch' ||
-      github.event.workflow_run.conclusion == 'success'
+    if: github.event.workflow_run.conclusion == 'success'
 
     outputs:
       new_version: ${{ steps.capture.outputs.version }}
@@ -126,7 +122,7 @@ jobs:
     if: needs.version.outputs.has_changes == 'true'
     runs-on: ubuntu-latest
     container: instrumentisto/flutter:latest
-    environment: pub.dev
+    environment: release
 
     steps:
       - uses: actions/checkout@v4
