@@ -1,0 +1,9 @@
+# Exclude CI/CD and tooling from published package
+.github/
+
+# Standard exclusions
+.gitignore
+.metadata
+.idea/
+build/
+coverage/

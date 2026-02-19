@@ -1,0 +1,127 @@
+name: Release
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types:
+      - completed
+    branches:
+      - main
+
+env:
+  GIT_CONFIG_COUNT: 1
+  GIT_CONFIG_KEY_0: safe.directory
+  GIT_CONFIG_VALUE_0: /usr/local/flutter
+
+permissions:
+  contents: write
+  id-token: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  version:
+    name: "Version"
+    runs-on: ubuntu-latest
+    container: instrumentisto/flutter:latest
+
+    if: github.event.workflow_run.conclusion == 'success'
+
+    outputs:
+      new_version: ${{ steps.capture.outputs.version }}
+      has_changes: ${{ steps.capture.outputs.has_changes }}
+    
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Melos
+        run: |
+          dart pub global activate melos
+          echo "$HOME/.pub-cache/bin" >> "$GITHUB_PATH"
+
+      - name: Copy Melos config to root
+        run: cp .github/melos.yaml melos.yaml
+
+      - name: Bootstrap
+        run: melos bootstrap
+
+      - name: Bump version (local files only — no git tag, no publish)
+        run: melos version --no-git-tag-version --no-publish --yes
+
+      - name: Capture version and detect changes
+        id: capture
+        run: |
+          VERSION=$(grep '^version:' pubspec.yaml | awk '{print $2}')
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+          if git diff --quiet; then
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::No releasable commits found. Stopping here."
+          else
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::Melos determined new version: $VERSION"
+          fi
+
+      - name: Print proposed changes
+        if: steps.capture.outputs.has_changes == 'true'
+        run: |
+          echo ""
+          echo "══════════════════════════════════════════════════"
+          echo "  Proposed release: v${{ steps.capture.outputs.version }}"
+          echo "══════════════════════════════════════════════════"
+          echo ""
+          echo "── pubspec.yaml ──"
+          git diff pubspec.yaml
+          echo ""
+          echo "── CHANGELOG.md ──"
+          git diff CHANGELOG.md
+          echo ""
+          echo "══════════════════════════════════════════════════"
+          echo "  Review the diff above, then approve the publish"
+          echo "  step in the GitHub Actions UI to release."
+          echo "══════════════════════════════════════════════════"
+
+      - name: Upload versioned files as artifact
+        if: steps.capture.outputs.has_changes == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: versioned-files
+          path: |
+            pubspec.yaml
+            CHANGELOG.md
+
+  publish:
+    name: "Publish"
+    needs: version
+    if: needs.version.outputs.has_changes == 'true'
+    runs-on: ubuntu-latest
+    container: instrumentisto/flutter:latest
+    environment: pub.dev
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: versioned-files
+
+      - run: flutter pub get
+
+      - name: Dry run publish
+        run: dart pub publish --dry-run
+
+      - name: Commit version bump and tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          VERSION="${{ needs.version.outputs.new_version }}"
+          git add pubspec.yaml CHANGELOG.md
+          git commit -m "chore: release v${VERSION} [skip ci]"
+          git tag "v${VERSION}"
+          git push origin main --tags

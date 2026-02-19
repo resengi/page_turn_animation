@@ -1,0 +1,31 @@
+name: Publish
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+*"
+
+env:
+  GIT_CONFIG_COUNT: 1
+  GIT_CONFIG_KEY_0: safe.directory
+  GIT_CONFIG_VALUE_0: /usr/local/flutter
+
+permissions:
+  id-token: write
+
+jobs:
+  publish:
+    name: Publish to pub.dev
+    runs-on: ubuntu-latest
+    container: instrumentisto/flutter:latest
+    environment: pub.dev
+    steps:
+      - uses: actions/checkout@v4
+
+      - run: flutter pub get
+
+      - name: Dry run publish
+        run: dart pub publish --dry-run
+
+      - name: Publish to pub.dev
+        run: dart pub publish --force
