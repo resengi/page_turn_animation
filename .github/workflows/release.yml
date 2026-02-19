@@ -151,18 +151,18 @@ jobs:
           git tag "v${VERSION}"
           git push origin main --tags
     
-    release:
-      name: Publish to pub.dev
-      runs-on: ubuntu-latest
-      container: instrumentisto/flutter:latest
-      environment: pub.dev
-      steps:
-        - uses: actions/checkout@v4
+  release:
+    name: Publish to pub.dev
+    runs-on: ubuntu-latest
+    container: instrumentisto/flutter:latest
+    environment: pub.dev
+    steps:
+      - uses: actions/checkout@v4
 
-        - run: flutter pub get
+      - run: flutter pub get
 
-        - name: Dry run publish
-          run: dart pub publish --dry-run
+      - name: Dry run publish
+        run: dart pub publish --dry-run
 
-        - name: Publish to pub.dev
-          run: dart pub publish --force
+      - name: Publish to pub.dev
+        run: dart pub publish --force
