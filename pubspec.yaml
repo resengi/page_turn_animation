@@ -3,7 +3,7 @@ name: page_turn_animation
 description: A Flutter package that provides a realistic page turn/curl animation
   effect for transitioning between content using captured images.
 
-version: 0.1.3
+version: 0.1.4
 
 homepage: https://github.com/resengi/page_turn_animation
 repository: https://github.com/resengi/page_turn_animation
