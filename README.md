@@ -6,6 +6,22 @@ A Flutter package that provides a realistic page turn/curl animation effect for 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Publisher](https://img.shields.io/pub/publisher/page_turn_animation.svg)](https://pub.dev/publishers/resengi.io)
 
+
+<table>
+  <tr>
+    <td><img src="https://raw.githubusercontent.com/resengi/page_turn_animation/main/assets/demo_top_edge.gif" width="200" alt="Top edge demo"></td>
+    <td><img src="https://raw.githubusercontent.com/resengi/page_turn_animation/main/assets/demo_bottom_edge.gif" width="200" alt="Bottom edge demo"></td>
+    <td><img src="https://raw.githubusercontent.com/resengi/page_turn_animation/main/assets/demo_left_edge.gif" width="200" alt="Left edge demo"></td>
+    <td><img src="https://raw.githubusercontent.com/resengi/page_turn_animation/main/assets/demo_right_edge.gif" width="200" alt="Right edge demo"></td>
+  </tr>
+  <tr>
+    <td align="center">Top</td>
+    <td align="center">Bottom</td>
+    <td align="center">Left</td>
+    <td align="center">Right</td>
+  </tr>
+</table>
+
 ## Features
 
 - Realistic 3D page curl effect
