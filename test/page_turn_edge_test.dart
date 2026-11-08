@@ -1,3 +1,7 @@
+// The deprecated shadow gradient getters return the middle of the edge the
+// page turns over (begin) and of the edge opposite it (end).
+// ignore_for_file: deprecated_member_use_from_same_package
+
 import 'package:flutter/painting.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:page_turn_animation/page_turn_animation.dart';

@@ -1,8 +1,7 @@
 # Page Turn Animation — Example
 
-A demo app showcasing the `page_turn_animation` package. It simulates a simple
-book viewer where pages can be turned forward and backward with realistic curl
-animations.
+A demo app for the `page_turn_animation` package: a few pages to turn by
+dragging them from anywhere, or with Next and Previous.
 
 ## Running the Example
 
@@ -15,24 +14,30 @@ flutter run
 
 ## What It Demonstrates
 
-- **Forward and backward page turns** using `PageTurnDirection`
-- **All four edge directions** (top, bottom, left, right) via a dropdown selector
-- **Widget-to-image capture** using `RepaintBoundary` and `toImage()`
-- **Animation lifecycle**: capture → animate → commit, managed with a simple
-  `_Phase` enum
-- **Custom styling** via `PageTurnStyle` (background color, shadow, segments,
-  curl intensity)
+- **Single Page**: a page turned over the hinge chosen above it (top, bottom,
+  left or right), landing on the back of the stack.
+- **Book**: a spread whose right-hand page turns over the spine onto the
+  left-hand page (`completionAngle: 180`), with a `backImage`: the back of each
+  page is the next left-hand page. Dragging the left-hand page turns it back
+  over the spine.
+- **Dragging** with `PageTurnDragProgress`, which keeps the spot the finger
+  pressed under the finger. Let go once the finger has come half a page and
+  the page turns; before that it falls back. A flick decides by its direction.
+- **Next and Previous**: timed turns, `PageTurnDirection.forward` and
+  `PageTurnDirection.backward`.
+- **Widget-to-image capture** using `RepaintBoundary` and `toImage()`.
 
 ## How It Works
 
-The example uses a three-phase approach:
+Each turn goes through three phases:
 
-1. **Idle** — displays the current page as a normal widget.
-2. **Capturing** — renders both the current and target pages in
-   `RepaintBoundary` widgets and captures them as `ui.Image` objects.
-3. **Animating** — hands the captured images to `PageTurnAnimation`, which
-   performs the curl effect. Once complete, the page index updates and the
-   cycle resets.
+1. **Idle**: the current page is shown as a normal widget.
+2. **Capturing**: the pages the turn shows are drawn in `RepaintBoundary`
+   widgets and captured as `ui.Image` objects.
+3. **Animating**: the captured images are handed to `PageTurnAnimation`,
+   driven by a `CurvedAnimation` for Next and Previous, or by the drag. When
+   the turn ends, the page changes if it completed, and the images are
+   disposed.
 
-This pattern can be adapted for any content — the pages in this demo are
-simple colored cards, but you can use any Flutter widget.
+The pages in this demo are simple colored cards, but you can use any Flutter
+widget.

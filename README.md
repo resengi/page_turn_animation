@@ -22,6 +22,19 @@ A Flutter package that provides a realistic page turn/curl animation effect for 
   </tr>
 </table>
 
+<table>
+  <tr>
+    <td><img src="https://raw.githubusercontent.com/resengi/page_turn_animation/main/assets/demo_book.gif" width="200" alt="Book demo"></td>
+    <td><img src="https://raw.githubusercontent.com/resengi/page_turn_animation/main/assets/demo_drag.gif" width="200" alt="Drag demo"></td>
+    <td><img src="https://raw.githubusercontent.com/resengi/page_turn_animation/main/assets/demo_book_drag.gif" width="200" alt="Book drag demo"></td>
+  </tr>
+  <tr>
+    <td align="center">Book (180°, back image)</td>
+    <td align="center">Drag from anywhere</td>
+    <td align="center">Drag a page back</td>
+  </tr>
+</table>
+
 ## Features
 
 - Realistic 3D page curl effect
@@ -30,6 +43,11 @@ A Flutter package that provides a realistic page turn/curl animation effect for 
 - Works with any Flutter widget content
 - Support for forward and backward page turns
 - Control which edge the page curls over (top, bottom, left, right)
+- Choose the surface the turned page lies down on, from beside the stack to the back of it
+- Turn the page from any point on it, not only its edge
+- Show an image on the back of the page, or a plain color
+- Drive the turn with a drag, keeping the pressed spot under the finger
+- Shadows as from a lamp over the hinge: the page's shadow on what it covers and on itself, and its shading
 
 ## Installation
 
@@ -37,7 +55,7 @@ Add the package to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  page_turn_animation: ^0.1.0
+  page_turn_animation: ^0.1.4
 ```
 
 Then run:
@@ -132,6 +150,8 @@ Stack(
 )
 ```
 
+As it turns, the page is drawn outside the widget's box: up to about 60% of its length past the hinge at the default settings (a little over its whole length at most, with other completion angles, curl intensities and finger starts) and up to about a sixth of its width past each side.
+
 ### Forward vs Backward Direction
 
 ```dart
@@ -155,29 +175,29 @@ PageTurnAnimation(
 Control which edge the page curls over using the `edge` parameter:
 
 ```dart
-// Page curls over the right edge (like turning a book page)
+// Page curls over its left edge (like a page of a book read left to right)
 PageTurnAnimation(
   image: currentPageImage,
   animation: controller,
   direction: PageTurnDirection.forward,
-  edge: PageTurnEdge.right,
+  edge: PageTurnEdge.left,
 )
 
-// Page curls over the bottom edge (like a wall calendar)
+// Page curls up over the top edge (like a wall calendar)
 PageTurnAnimation(
   image: currentPageImage,
   animation: controller,
   direction: PageTurnDirection.forward,
-  edge: PageTurnEdge.bottom,
+  edge: PageTurnEdge.top,
 )
 ```
 
 | Edge | Use Case |
 |------|----------|
-| `top` | Top-bound notepad (default) |
-| `bottom` | Wall calendar, bottom-bound pad |
-| `left` | Right-to-left book, manga |
-| `right` | Left-to-right book, standard Western reading |
+| `top` | Top-bound notepad, wall calendar (default) |
+| `bottom` | Bottom-bound pad |
+| `left` | Left-to-right book, standard Western reading |
+| `right` | Right-to-left book, manga |
 
 ### All Edge and Direction Combinations
 
@@ -191,6 +211,85 @@ PageTurnAnimation(
 | `left` | `backward` | Page curls right into view from left edge |
 | `right` | `forward` | Page curls right and away over right edge |
 | `right` | `backward` | Page curls left into view from right edge |
+
+### Choosing Where the Page Lands
+
+The `completionAngle` parameter sets the surface the turned page lies down on, in degrees around the hinge from the page's place on the stack, from 180 to 360:
+
+```dart
+// Lands flat beside the stack, like a book's facing page
+PageTurnAnimation(
+  image: currentPageImage,
+  animation: controller,
+  direction: PageTurnDirection.forward,
+  edge: PageTurnEdge.left,
+  completionAngle: 180,
+)
+```
+
+| Completion angle | Where the page lands |
+|------------------|----------------------|
+| `180` | Flat on the desk beside the stack |
+| `225` | A surface sloping down at 45 degrees on the far side |
+| `270` | Straight down past the hinge |
+| `360` | Flat on the back of the stack (default) |
+
+Short of 360, the part nearest the hinge lands first and the far part of the page curls back the other way and lands last.
+
+### The Back of the Page
+
+The `backImage` parameter puts an image on the back of the page. It shows wherever the page's back faces the viewer as it turns, stretched over the page like the front image, with the shadows and shading over it. It reads correctly once the page has turned 180°, lying beside the stack, on every edge: in a book, for instance, the back of a right-hand page is the left-hand page that follows. In either direction it is the back of the page that turns: a backward turn starts where the forward turn ends, at 180° with the page lying beside the stack, its back showing. Without a `backImage`, the back is the plain `backgroundColor`.
+
+```dart
+PageTurnAnimation(
+  image: rightPageImage,
+  backImage: nextLeftPageImage,
+  animation: controller,
+  direction: PageTurnDirection.forward,
+  edge: PageTurnEdge.left,
+)
+```
+
+### Turning From a Point on the Page
+
+The `fingerStart` parameter sets where on the page the turn starts, as a share of the page's length from the free edge, from 0 (the edge, the default) to 0.9 (near the hinge). From further in, the finger first pushes the page toward the hinge into an arch, then the page lifts off and turns:
+
+```dart
+PageTurnAnimation(
+  image: currentPageImage,
+  animation: controller,
+  direction: PageTurnDirection.forward,
+  fingerStart: 0.3,
+)
+```
+
+`PageTurnInputs` holds the standard values and accepted ranges of `completionAngle` and `fingerStart`; a value outside its range throws an `ArgumentError`.
+
+### Dragging the Page
+
+`PageTurnDragProgress` turns a drag into the turn's progress, keeping the spot the finger pressed under the finger along the turn. Set the finger start from where the drag begins, and draw the turn with the same page length, style, completion angle and finger start, with no curve on the progress:
+
+```dart
+// When the drag begins, at `along` logical pixels from the hinge:
+final fingerStart = (1 - along / pageLength).clamp(
+  PageTurnInputs.minFingerStart,
+  PageTurnInputs.maxFingerStart,
+);
+final drag = PageTurnDragProgress(
+  pageLength: pageLength,
+  fingerStart: fingerStart,
+);
+
+// On each move, with `travel` the finger's distance toward the hinge so far:
+controller.value = drag.progressFor(travel, current: controller.value);
+
+// When the finger lifts:
+controller.animateTo(1); // or controller.animateBack(0)
+```
+
+Until the pressed spot reaches the hinge, the turn keeps it under the finger along the turn, apart from the first 3% of a page of travel, over which the page's lift is spread out; after that the rest of the turn finishes within the next page length of travel. Across the turn, the page is drawn wider the higher it rises, so a spot away from its middle moves a little outward.
+
+The drag drives a forward turn. To drag back a page that has turned 180° and lies flat beside the stack, as in a book, turn it forward again over the hinge, which is now its opposite edge: a page turned over `left` comes back over `right`, and one turned over `top` over `bottom`. Draw it where it lies, with a completion angle of 180, its back (the side facing up) as the `image` and its front as the `backImage`. The example app's Book tab drags its left-hand page back this way.
 
 ### Using StaticImagePainter
 
@@ -227,22 +326,26 @@ PageTurnAnimation(
   animation: controller,
   direction: PageTurnDirection.forward,
   style: PageTurnStyle(
-    // Background color visible during animation
+    // Color of the page's back, seen where the paper folds over, when there
+    // is no backImage
     backgroundColor: Colors.grey[100]!,
     
-    // Shadow color for depth effect
+    // Color of the page's shadow and shading
     shadowColor: Colors.black,
     
-    // Shadow opacity (0.0 - 1.0)
+    // How dark the shadow is where the paper casting it touches (0.0 - 1.0)
     shadowOpacity: 0.8,
     
-    // Shadow blur radius
+    // How soft the shadow is, in logical pixels
     shadowBlurRadius: 25.0,
     
+    // How far above the hinge the lamp is, in page lengths (more than 1)
+    lampDistanceFromPage: 2.0,
+
     // Number of segments (higher = smoother, lower = faster)
     segments: 80,
     
-    // Curl intensity multiplier
+    // How tightly the page rolls
     curlIntensity: 1.2,
   ),
 )
@@ -252,12 +355,30 @@ PageTurnAnimation(
 
 | Property | Type | Default | Description |
 |----------|------|---------|-------------|
-| `backgroundColor` | `Color` | `Colors.white` | Background visible during animation |
-| `shadowColor` | `Color` | `Colors.black` | Shadow color beneath curling page |
-| `shadowOpacity` | `double` | `0.9` | Shadow opacity (0.0 - 1.0) |
-| `shadowBlurRadius` | `double` | `20.0` | Shadow blur radius in pixels |
+| `backgroundColor` | `Color` | `Colors.white` | Color of the page's back when there is no `backImage` |
+| `shadowColor` | `Color` | `Colors.black` | Color of the page's shadow and shading |
+| `shadowOpacity` | `double` | `0.9` | How dark the shadow is where the paper casting it touches (0.0 - 1.0); 0 turns the shadows off |
+| `shadowBlurRadius` | `double` | `20.0` | How soft the shadow is, in logical pixels: its soft edge is twice this wide for paper a page length away |
+| `lampDistanceFromPage` | `double` | `2.0` | How far above the hinge the lamp is, in page lengths (more than 1) |
 | `segments` | `int` | `100` | Rendering segments (quality vs performance) |
-| `curlIntensity` | `double` | `1.0` | Multiplier for curl effect intensity |
+| `curlIntensity` | `double` | `1.0` | How tightly the page rolls (positive and finite) |
+
+### Shadows
+
+The shadows are drawn as from a lamp along the hinge, `lampDistanceFromPage` page lengths above it; a page length is the page's length from the hinge to its free edge.
+
+- **The page's shadow** falls wherever the page stands between the lamp and something: on the content beneath the page, on the surface the page lands on beyond the hinge (see [Choosing Where the Page Lands](#choosing-where-the-page-lands)), and on the page itself. It is darkest where the paper casting it is close, and lighter and softer the further away. It stays within the page's own area, and beyond the hinge within a page length of it.
+- **Shading**: paper turned away from the lamp is drawn darker than flat paper.
+
+Both are drawn in `shadowColor` and together are never darker than `shadowOpacity`. Nothing is blurred: the soft edge comes from the lamp's width, which `shadowBlurRadius` sets. A nearer lamp throws the shadow further out. `shadowOpacity: 0` turns the shadows off, and they are then not worked out at all.
+
+```dart
+PageTurnStyle(
+  shadowOpacity: 0.6,
+  shadowBlurRadius: 30,
+  lampDistanceFromPage: 3,
+)
+```
 
 ### Using copyWith
 
@@ -311,6 +432,8 @@ final customStyle = PageTurnStyle.defaults.copyWith(
 ### Performance Tips
 
 - Lower `segments` value (e.g., 50-80) for better performance on lower-end devices
+- With the shadows on, their work grows faster than `segments`, so high segment counts cost far more with the shadows on than off
+- Set `shadowOpacity: 0` to skip the shadows' work each frame
 - Avoid capturing images during animations
 - Consider caching captured images for repeated animations
 
@@ -326,6 +449,9 @@ const PageTurnAnimation({
   required Animation<double> animation,
   required PageTurnDirection direction,
   PageTurnEdge edge = PageTurnEdge.top,
+  ui.Image? backImage,
+  double completionAngle = PageTurnInputs.standardCompletionAngle, // 360
+  double fingerStart = PageTurnInputs.standardFingerStart, // 0
   PageTurnStyle style = const PageTurnStyle(),
 })
 ```
@@ -347,6 +473,14 @@ Enum defining the animation direction:
 ### PageTurnStyle
 
 Configuration class for visual styling. See [Customization](#customization) for details.
+
+### PageTurnInputs
+
+The standard values and accepted ranges of the completion angle (180 to 360 degrees) and the finger start (0 to 0.9), and `validate`, which throws an `ArgumentError` for a value outside its range.
+
+### PageTurnDragProgress
+
+Turns a drag's travel toward the hinge into the turn's progress. See [Dragging the Page](#dragging-the-page).
 
 ### StaticImagePainter
 

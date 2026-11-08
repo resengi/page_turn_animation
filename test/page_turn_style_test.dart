@@ -12,6 +12,7 @@ void main() {
         expect(style.shadowColor, Colors.black);
         expect(style.shadowOpacity, 0.9);
         expect(style.shadowBlurRadius, 20.0);
+        expect(style.lampDistanceFromPage, 2.0);
         expect(style.segments, 100);
         expect(style.curlIntensity, 1.0);
       });
@@ -22,6 +23,7 @@ void main() {
           shadowColor: Colors.blue,
           shadowOpacity: 0.5,
           shadowBlurRadius: 15.0,
+          lampDistanceFromPage: 3.0,
           segments: 50,
           curlIntensity: 1.5,
         );
@@ -30,6 +32,7 @@ void main() {
         expect(style.shadowColor, Colors.blue);
         expect(style.shadowOpacity, 0.5);
         expect(style.shadowBlurRadius, 15.0);
+        expect(style.lampDistanceFromPage, 3.0);
         expect(style.segments, 50);
         expect(style.curlIntensity, 1.5);
       });
@@ -86,6 +89,35 @@ void main() {
         );
       });
 
+      test('throws assertion error for curlIntensity that is not finite', () {
+        for (final curlIntensity in const [double.infinity, double.nan]) {
+          expect(
+            () => PageTurnStyle(curlIntensity: curlIntensity),
+            throwsA(isA<AssertionError>()),
+            reason: '$curlIntensity',
+          );
+        }
+      });
+
+      test('throws assertion error for a lampDistanceFromPage of 1 or less, '
+          'or not finite', () {
+        // The lamp must be above the highest the page reaches: a page length.
+        for (final lampDistanceFromPage in const [
+          1.0,
+          0.5,
+          0.0,
+          -2.0,
+          double.infinity,
+          double.nan,
+        ]) {
+          expect(
+            () => PageTurnStyle(lampDistanceFromPage: lampDistanceFromPage),
+            throwsA(isA<AssertionError>()),
+            reason: '$lampDistanceFromPage',
+          );
+        }
+      });
+
       test('accepts boundary values', () {
         // Should not throw
         const style1 = PageTurnStyle(shadowOpacity: 0.0);
@@ -102,6 +134,9 @@ void main() {
 
         const style5 = PageTurnStyle(curlIntensity: 0.01);
         expect(style5.curlIntensity, 0.01);
+
+        const style6 = PageTurnStyle(lampDistanceFromPage: 1.001);
+        expect(style6.lampDistanceFromPage, 1.001);
       });
     });
 
@@ -182,6 +217,14 @@ void main() {
         expect(copy.segments, 200);
       });
 
+      test('copies with new lampDistanceFromPage', () {
+        const original = PageTurnStyle();
+        final copy = original.copyWith(lampDistanceFromPage: 4.0);
+
+        expect(copy.lampDistanceFromPage, 4.0);
+        expect(copy.shadowBlurRadius, original.shadowBlurRadius);
+      });
+
       test('copies with new curlIntensity', () {
         const original = PageTurnStyle();
         final copy = original.copyWith(curlIntensity: 0.5);
@@ -228,6 +271,14 @@ void main() {
         expect(style1, isNot(equals(style2)));
       });
 
+      test('styles with different lamp distances are not equal', () {
+        const style1 = PageTurnStyle(lampDistanceFromPage: 2.0);
+        const style2 = PageTurnStyle(lampDistanceFromPage: 3.0);
+
+        expect(style1, isNot(equals(style2)));
+        expect(style1.hashCode, isNot(equals(style2.hashCode)));
+      });
+
       test('identical style is equal to itself', () {
         const style = PageTurnStyle();
 
@@ -245,6 +296,7 @@ void main() {
         expect(string, contains('shadowColor'));
         expect(string, contains('shadowOpacity'));
         expect(string, contains('shadowBlurRadius'));
+        expect(string, contains('lampDistanceFromPage'));
         expect(string, contains('segments'));
         expect(string, contains('curlIntensity'));
       });
