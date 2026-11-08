@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:page_turn_animation/page_turn_animation.dart';
+import 'package:page_turn_animation/src/page_turn_painter.dart';
 
 // Helper to create a test image
 Future<ui.Image> createTestImage({
@@ -283,6 +284,160 @@ void main() {
       );
 
       controller.dispose();
+    });
+
+    testWidgets('passes completionAngle and fingerStart to its painter', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: PageTurnAnimation(
+              image: testImage,
+              animation: const AlwaysStoppedAnimation(0.5),
+              direction: PageTurnDirection.forward,
+              completionAngle: 225,
+              fingerStart: 0.4,
+            ),
+          ),
+        ),
+      );
+
+      final customPaint = tester.widget<CustomPaint>(
+        find.descendant(
+          of: find.byType(PageTurnAnimation),
+          matching: find.byType(CustomPaint),
+        ),
+      );
+      final painter = customPaint.painter! as PageTurnPainter;
+      expect(painter.completionAngle, 225);
+      expect(painter.fingerStart, 0.4);
+    });
+
+    testWidgets('passes its back image to its painter, and has none unless '
+        'given one', (tester) async {
+      Future<PageTurnPainter> painterFor(ui.Image? backImage) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: PageTurnAnimation(
+                image: testImage,
+                backImage: backImage,
+                animation: const AlwaysStoppedAnimation(0.5),
+                direction: PageTurnDirection.forward,
+              ),
+            ),
+          ),
+        );
+        final customPaint = tester.widget<CustomPaint>(
+          find.descendant(
+            of: find.byType(PageTurnAnimation),
+            matching: find.byType(CustomPaint),
+          ),
+        );
+        return customPaint.painter! as PageTurnPainter;
+      }
+
+      expect((await painterFor(testImage)).backImage, same(testImage));
+      expect((await painterFor(null)).backImage, isNull);
+    });
+
+    testWidgets('defaults to completion angle 360 and finger start 0', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: PageTurnAnimation(
+              image: testImage,
+              animation: const AlwaysStoppedAnimation(0.5),
+              direction: PageTurnDirection.forward,
+            ),
+          ),
+        ),
+      );
+
+      final customPaint = tester.widget<CustomPaint>(
+        find.descendant(
+          of: find.byType(PageTurnAnimation),
+          matching: find.byType(CustomPaint),
+        ),
+      );
+      final painter = customPaint.painter! as PageTurnPainter;
+      expect(painter.completionAngle, 360);
+      expect(painter.fingerStart, 0);
+    });
+
+    testWidgets('accepts completion angles and finger starts over the whole '
+        'of the ranges PageTurnInputs gives, the bounds included', (
+      tester,
+    ) async {
+      for (final (completionAngle, fingerStart) in const [
+        (PageTurnInputs.minCompletionAngle, PageTurnInputs.minFingerStart),
+        (PageTurnInputs.minCompletionAngle, PageTurnInputs.maxFingerStart),
+        (PageTurnInputs.maxCompletionAngle, PageTurnInputs.minFingerStart),
+        (PageTurnInputs.maxCompletionAngle, PageTurnInputs.maxFingerStart),
+      ]) {
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: PageTurnAnimation(
+                image: testImage,
+                animation: const AlwaysStoppedAnimation(0.5),
+                direction: PageTurnDirection.forward,
+                completionAngle: completionAngle,
+                fingerStart: fingerStart,
+              ),
+            ),
+          ),
+        );
+        expect(
+          tester.takeException(),
+          isNull,
+          reason: '$completionAngle, $fingerStart',
+        );
+      }
+    });
+
+    testWidgets('reports an ArgumentError naming completionAngle or '
+        'fingerStart when it is out of range or not finite', (tester) async {
+      const cases = [
+        (completionAngle: 179.0, fingerStart: 0.0, name: 'completionAngle'),
+        (completionAngle: 360.0001, fingerStart: 0.0, name: 'completionAngle'),
+        (
+          completionAngle: double.nan,
+          fingerStart: 0.0,
+          name: 'completionAngle',
+        ),
+        (completionAngle: 360.0, fingerStart: -0.001, name: 'fingerStart'),
+        (completionAngle: 360.0, fingerStart: 0.95, name: 'fingerStart'),
+        (
+          completionAngle: 360.0,
+          fingerStart: double.infinity,
+          name: 'fingerStart',
+        ),
+      ];
+      for (final c in cases) {
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: PageTurnAnimation(
+                image: testImage,
+                animation: const AlwaysStoppedAnimation(0.5),
+                direction: PageTurnDirection.forward,
+                completionAngle: c.completionAngle,
+                fingerStart: c.fingerStart,
+              ),
+            ),
+          ),
+        );
+
+        expect(
+          tester.takeException(),
+          isA<ArgumentError>().having((e) => e.name, 'name', c.name),
+          reason: '$c',
+        );
+      }
     });
 
     group('edge parameter', () {

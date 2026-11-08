@@ -30,12 +30,12 @@
 /// Control which edge the page curls over:
 ///
 /// ```dart
-/// // Book-like page turn (curls over right edge)
+/// // A book read left to right (curls over its left edge, the spine)
 /// PageTurnAnimation(
 ///   image: capturedImage,
 ///   animation: animationController,
 ///   direction: PageTurnDirection.forward,
-///   edge: PageTurnEdge.right,
+///   edge: PageTurnEdge.left,
 /// )
 /// ```
 ///
@@ -45,6 +45,10 @@
 /// - [PageTurnEdge]: Enum for selecting which edge the page curls over
 /// - [PageTurnDirection]: Enum for forward/backward animation direction
 /// - [PageTurnStyle]: Configuration class for visual customization
+/// - [PageTurnDragProgress]: Turns a drag on the page into the turn's
+///   progress, so the spot the finger pressed stays under it
+/// - [PageTurnInputs]: The standard values and accepted ranges of the
+///   completion angle and the finger start
 /// - [StaticImagePainter]: Helper for displaying static captured images
 ///
 /// See the README for comprehensive usage examples and best practices.
@@ -52,6 +56,8 @@ library;
 
 export 'src/page_turn_animation_widget.dart';
 export 'src/page_turn_direction.dart';
+export 'src/page_turn_drag_progress.dart';
 export 'src/page_turn_edge.dart';
+export 'src/page_turn_inputs.dart';
 export 'src/page_turn_style.dart';
 export 'src/static_image_painter.dart';
