@@ -1,5 +1,35 @@
 # Change Log
 
+
+
+## 2026-11-08
+
+### Changes
+
+---
+
+Packages with breaking changes:
+
+ - [`page_turn_animation` - `v0.2.0`](#page_turn_animation---v020)
+
+Packages with other changes:
+
+ - There are no other changes in this release.
+
+---
+
+#### `page_turn_animation` - `v0.2.0`
+
+ - **BREAKING** **FEAT**: Major update to visual and new features ([#10](https://github.com/resengi/page_turn_animation/issues/10)). ([9d9163c1](https://github.com/resengi/page_turn_animation/commit/9d9163c1dedb429e14f58f9e8cbfb9c1944bd468))
+
+## 0.2.0
+
+> Note: This release has breaking changes.
+
+ - **BREAKING** **FEAT**: Major update to visual and new features ([#10](https://github.com/resengi/page_turn_animation/issues/10)). ([9d9163c1](https://github.com/resengi/page_turn_animation/commit/9d9163c1dedb429e14f58f9e8cbfb9c1944bd468))
+
+# Change Log
+
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
@@ -42,9 +72,6 @@ Packages with other changes:
  - **FIX**: Initial attempt at patching melos step in workflow. ([a1451291](https://github.com/resengi/page_turn_animation/commit/a145129171515e47ceb2cebd777bca28fa5279da))
  - **FEAT**: Migration of the Package from Private repo to public. ([2ac0df59](https://github.com/resengi/page_turn_animation/commit/2ac0df5967d2ea26500d8c8b51cc22209a06f768))
  - **DOCS**: Adding example and updated documentation ([#9](https://github.com/resengi/page_turn_animation/issues/9)). ([bef637c6](https://github.com/resengi/page_turn_animation/commit/bef637c6edf40305ab65df98ad3ec54145e28d2f))
-
-# Change Log
-
 
 
 ## 2026-02-19

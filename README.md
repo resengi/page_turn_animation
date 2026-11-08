@@ -55,7 +55,7 @@ Add the package to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  page_turn_animation: ^0.1.4
+  page_turn_animation: ^0.2.0
 ```
 
 Then run:
