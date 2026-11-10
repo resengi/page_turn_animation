@@ -156,11 +156,13 @@ class PageTurnAnimation extends StatelessWidget {
   ///
   /// Progress should go from 0.0 to 1.0. For a forward turn:
   /// - At 0.0: The page lies flat
-  /// - At 1.0: The page has turned over the hinge and lies on the surface at
-  ///   the [completionAngle]: out of sight behind the stack at 360, flat
-  ///   beside it at 180
+  /// - At 1.0: The page has turned over the hinge onto the surface at the
+  ///   [completionAngle]: lying on it where the surface is seen beside the
+  ///   stack, as at 180, and just gone out of sight where the surface is behind
+  ///   the stack, as at 360
   ///
-  /// A backward turn shows the same turn from its end back to its start.
+  /// A backward turn shows the same turn from its end back to its start, so
+  /// the page comes into sight as it starts.
   ///
   /// Consider using [CurvedAnimation] for more natural motion:
   /// ```dart

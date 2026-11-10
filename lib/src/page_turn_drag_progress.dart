@@ -136,7 +136,7 @@ class PageTurnDragProgress {
   /// Where the pressed spot is seen at progress [t], in page lengths from the
   /// hinge.
   double _spotAt(double t) => PageTurnPainter.paperAlong(
-    t: t,
+    progress: t,
     paperPosition: _spotStart,
     pageLength: pageLength,
     style: style,

@@ -9,10 +9,10 @@ A Flutter package that provides a realistic page turn/curl animation effect for 
 
 <table>
   <tr>
-    <td><img src="https://raw.githubusercontent.com/resengi/page_turn_animation/main/assets/demo_top_edge.gif" width="200" alt="Top edge demo"></td>
-    <td><img src="https://raw.githubusercontent.com/resengi/page_turn_animation/main/assets/demo_bottom_edge.gif" width="200" alt="Bottom edge demo"></td>
-    <td><img src="https://raw.githubusercontent.com/resengi/page_turn_animation/main/assets/demo_left_edge.gif" width="200" alt="Left edge demo"></td>
-    <td><img src="https://raw.githubusercontent.com/resengi/page_turn_animation/main/assets/demo_right_edge.gif" width="200" alt="Right edge demo"></td>
+    <td><img src="https://raw.githubusercontent.com/resengi/page_turn_animation/main/assets/demo_top_edge.webp" width="200" alt="Top edge demo"></td>
+    <td><img src="https://raw.githubusercontent.com/resengi/page_turn_animation/main/assets/demo_bottom_edge.webp" width="200" alt="Bottom edge demo"></td>
+    <td><img src="https://raw.githubusercontent.com/resengi/page_turn_animation/main/assets/demo_left_edge.webp" width="200" alt="Left edge demo"></td>
+    <td><img src="https://raw.githubusercontent.com/resengi/page_turn_animation/main/assets/demo_right_edge.webp" width="200" alt="Right edge demo"></td>
   </tr>
   <tr>
     <td align="center">Top</td>
@@ -24,9 +24,9 @@ A Flutter package that provides a realistic page turn/curl animation effect for 
 
 <table>
   <tr>
-    <td><img src="https://raw.githubusercontent.com/resengi/page_turn_animation/main/assets/demo_book.gif" width="200" alt="Book demo"></td>
-    <td><img src="https://raw.githubusercontent.com/resengi/page_turn_animation/main/assets/demo_drag.gif" width="200" alt="Drag demo"></td>
-    <td><img src="https://raw.githubusercontent.com/resengi/page_turn_animation/main/assets/demo_book_drag.gif" width="200" alt="Book drag demo"></td>
+    <td><img src="https://raw.githubusercontent.com/resengi/page_turn_animation/main/assets/demo_book.webp" width="200" alt="Book demo"></td>
+    <td><img src="https://raw.githubusercontent.com/resengi/page_turn_animation/main/assets/demo_drag.webp" width="200" alt="Drag demo"></td>
+    <td><img src="https://raw.githubusercontent.com/resengi/page_turn_animation/main/assets/demo_book_drag.webp" width="200" alt="Book drag demo"></td>
   </tr>
   <tr>
     <td align="center">Book (180°, back image)</td>
