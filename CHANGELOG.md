@@ -2,6 +2,31 @@
 
 
 
+## 2026-11-10
+
+### Changes
+
+---
+
+Packages with breaking changes:
+
+ - There are no breaking changes in this release.
+
+Packages with other changes:
+
+ - [`page_turn_animation` - `v0.2.1`](#page_turn_animation---v021)
+
+---
+
+#### `page_turn_animation` - `v0.2.1`
+
+ - **FIX**: minor animation timing adjustment and changing gifs to webps ([#11](https://github.com/resengi/page_turn_animation/issues/11)). ([2b0a2675](https://github.com/resengi/page_turn_animation/commit/2b0a267578ef1bc5ec381ae751489bf4a02ec063))
+
+## 0.2.1
+
+ - **FIX**: minor animation timing adjustment and changing gifs to webps ([#11](https://github.com/resengi/page_turn_animation/issues/11)). ([2b0a2675](https://github.com/resengi/page_turn_animation/commit/2b0a267578ef1bc5ec381ae751489bf4a02ec063))
+
+
 ## 2026-11-08
 
 ### Changes
