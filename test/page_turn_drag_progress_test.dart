@@ -29,7 +29,7 @@ void main() {
       /// pixels from the hinge.
       double spotAt(double t) =>
           PageTurnPainter.paperAlong(
-            t: t,
+            progress: t,
             paperPosition: 1 - fingerStart,
             pageLength: pageLength,
             style: style,
@@ -153,7 +153,7 @@ void main() {
           );
           double spotAt(double t) =>
               PageTurnPainter.paperAlong(
-                t: t,
+                progress: t,
                 paperPosition: 1 - fingerStart,
                 pageLength: pageLength,
                 style: style,

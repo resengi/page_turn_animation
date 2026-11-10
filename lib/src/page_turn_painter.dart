@@ -18,6 +18,8 @@ import 'page_turn_style.dart';
 /// The page is drawn as strips across it ([stripEnds]):
 /// 1. The hinge edge sets which way the page's length runs on screen, and a
 ///    backward turn is the forward turn run from its end back to its start.
+///    Where the page goes out of sight behind the stack before the end of the
+///    turn, the progress runs over the turn only up to there ([_outOfSight]).
 /// 2. Each strip is seen in perspective from a camera over the page's centre:
 ///    a strip at height z is drawn D / (D − z) times its size, with D
 ///    [PageTurnConstants.cameraDistance].
@@ -135,11 +137,12 @@ class PageTurnPainter extends CustomPainter {
             fromHinge: flipOrigin,
           );
     final clampedProgress = progress.clamp(0.0, 1.0);
-    final t = direction == PageTurnDirection.forward
-        ? clampedProgress
-        : 1 - clampedProgress;
-
     final strips = _stripCount(style, pageLength);
+    final t =
+        (direction == PageTurnDirection.forward
+            ? clampedProgress
+            : 1 - clampedProgress) *
+        _outOfSight(style, completionAngle, fingerStart, strips);
     final (:y, :z, :directions) = stripEnds(
       t: t,
       curlIntensity: style.curlIntensity,
@@ -160,10 +163,7 @@ class PageTurnPainter extends CustomPainter {
     // original page are left out.
     final order = [
       for (var i = 0; i < strips; i++)
-        if (!(directions[i] > math.pi &&
-            (_behindOriginalPage(seenAlong[i], z[i]) ||
-                _behindOriginalPage(seenAlong[i + 1], z[i + 1]))))
-          i,
+        if (!_leftOut(i, directions, seenAlong, z)) i,
     ]..sort((a, b) => (z[a] + z[a + 1]).compareTo(z[b] + z[b + 1]));
 
     // The shadows, from the lamp over the hinge: the lamp is as wide as makes
@@ -467,13 +467,13 @@ class PageTurnPainter extends CustomPainter {
   }
 
   /// Where the paper at [paperPosition] (0 at the hinge, 1 at the free edge)
-  /// is seen at turn progress [t], in page lengths along the page from the
-  /// hinge, as [paint] draws it on a page [pageLength] logical pixels long with
-  /// [style], [completionAngle] and [fingerStart]: between the ends of its
-  /// strip, as far along as it is along the strip, since the strip's slice of
-  /// the image is stretched evenly over it.
+  /// is seen at a forward turn's [progress], in page lengths along the page
+  /// from the hinge, as [paint] draws it on a page [pageLength] logical pixels
+  /// long with [style], [completionAngle] and [fingerStart]: between the ends
+  /// of its strip, as far along as it is along the strip, since the strip's
+  /// slice of the image is stretched evenly over it.
   static double paperAlong({
-    required double t,
+    required double progress,
     required double paperPosition,
     required double pageLength,
     required PageTurnStyle style,
@@ -482,7 +482,7 @@ class PageTurnPainter extends CustomPainter {
   }) {
     final strips = _stripCount(style, pageLength);
     final (:y, :z, directions: _) = stripEnds(
-      t: t,
+      t: progress * _outOfSight(style, completionAngle, fingerStart, strips),
       curlIntensity: style.curlIntensity,
       completionAngle: completionAngle,
       fingerStart: fingerStart,
@@ -500,6 +500,83 @@ class PageTurnPainter extends CustomPainter {
   /// length, and at least one.
   static int _stripCount(PageTurnStyle style, double pageLength) =>
       math.max(1, math.min(style.segments, pageLength.floor()));
+
+  /// How far [_outOfSight] steps back from the end of the turn at a time, in
+  /// turn progress.
+  static const double _outOfSightStep = 1 / 64;
+
+  /// How closely [_outOfSight] finds where the page goes out of sight, in turn
+  /// progress.
+  static const double _outOfSightPrecision = 1e-4;
+
+  /// How many of [_outOfSight]'s latest answers are kept: enough for several
+  /// turns animating at once with different settings.
+  static const int _outOfSightAnswersKept = 8;
+
+  /// [_outOfSight]'s answers by its inputs, the most recently asked for last.
+  static final _outOfSightAnswers = <(double, double, double, int), double>{};
+
+  /// The turn progress at which the page goes out of sight behind the stack
+  /// for the rest of the turn, as [paint] draws a page cut into [strips]
+  /// strips with [style], [completionAngle] and [fingerStart]; 1 where the
+  /// page is in sight at the end of the turn, as on a surface seen beside the
+  /// stack. [paint] and [paperAlong] run a forward turn's progress over the
+  /// turn up to it.
+  ///
+  /// It is found from the end of the turn: stepping back [_outOfSightStep] at
+  /// a time to a turn progress at which the page is in sight, then halving the
+  /// step after it to within [_outOfSightPrecision]. At the answer the page is
+  /// out of sight. The latest answers are kept ([_outOfSightAnswersKept]), as
+  /// [paint] asks with the same inputs on every frame of a turn.
+  static double _outOfSight(
+    PageTurnStyle style,
+    double completionAngle,
+    double fingerStart,
+    int strips,
+  ) {
+    final inputs = (style.curlIntensity, completionAngle, fingerStart, strips);
+    final known = _outOfSightAnswers.remove(inputs);
+    if (known != null) return _outOfSightAnswers[inputs] = known;
+    bool inSight(double t) {
+      final (:y, :z, :directions) = stripEnds(
+        t: t,
+        curlIntensity: style.curlIntensity,
+        completionAngle: completionAngle,
+        fingerStart: fingerStart,
+        strips: strips,
+      );
+      final seenAlong = [
+        for (var k = 0; k <= strips; k++) _seenAlong(y[k], _seenScale(z[k])),
+      ];
+      for (var i = 0; i < strips; i++) {
+        if (!_leftOut(i, directions, seenAlong, z)) return true;
+      }
+      return false;
+    }
+
+    // The flat page at the start of the turn is in sight, so the steps back
+    // end there at the latest.
+    var unseen = 1.0;
+    if (!inSight(unseen)) {
+      var seen = unseen - _outOfSightStep;
+      while (!inSight(seen)) {
+        unseen = seen;
+        seen -= _outOfSightStep;
+      }
+      while (unseen - seen > _outOfSightPrecision) {
+        final middle = (seen + unseen) / 2;
+        if (inSight(middle)) {
+          seen = middle;
+        } else {
+          unseen = middle;
+        }
+      }
+    }
+    if (_outOfSightAnswers.length == _outOfSightAnswersKept) {
+      _outOfSightAnswers.remove(_outOfSightAnswers.keys.first);
+    }
+    return _outOfSightAnswers[inputs] = unseen;
+  }
 
   /// How much bigger than its size the camera sees a point at height [z].
   static double _seenScale(double z) =>
@@ -519,7 +596,7 @@ class PageTurnPainter extends CustomPainter {
   /// original page, other than on the hinge line itself, which every turn
   /// passes through.
   ///
-  /// Only paper that has turned more than half a turn is tested ([paint]):
+  /// Only paper that has turned more than half a turn is tested ([_leftOut]):
   /// paper turned less cannot be behind the stack, as it lies on or above the
   /// desk. Its height is a sum of the strips' rises, so where it lies on the
   /// desk it can come out a little below the original page's level (with a
@@ -529,6 +606,20 @@ class PageTurnPainter extends CustomPainter {
   /// turn, the whole page.
   static bool _behindOriginalPage(double along, double z) =>
       z <= 0 && along > 0 && along <= 1;
+
+  /// Whether [paint] leaves out strip [i], from strip end i to i + 1, given
+  /// the strips' [directions] and where the camera sees their ends, [seenAlong]
+  /// the page at heights [z]: paper turned more than half a turn that the
+  /// original page hides at either end ([_behindOriginalPage]).
+  static bool _leftOut(
+    int i,
+    List<double> directions,
+    List<double> seenAlong,
+    List<double> z,
+  ) =>
+      directions[i] > math.pi &&
+      (_behindOriginalPage(seenAlong[i], z[i]) ||
+          _behindOriginalPage(seenAlong[i + 1], z[i + 1]));
 
   /// The ends of the page's [strips] strips at turn progress [t] (0: flat on
   /// the stack; 1: turned) with the style's [curlIntensity], the
